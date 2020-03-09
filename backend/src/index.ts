@@ -38,18 +38,22 @@ logger.level = 'info';
 // Parse arguments
 const args = parser.parse(process.argv);
 const redisHost: string = args['redis-host'];
-const githubClientId: string | undefined = args['github-client-id'];
-const githubClientSecret: string | undefined = args['github-client-secret'];
-const githubOauthToken: string | undefined = args['github-oauth-token'];
+const githubClientId: string | undefined = process.env.GITHUB_CLIENT_ID || args['github-client-id'];
+const githubClientSecret: string | undefined = process.env.GITHUB_CLIENT_SECRET || args['github-client-secret'];
+const githubOauthToken: string | undefined = process.env.GITHUB_OAUTH_TOKEN || args['github-oauth-token'];
 let githubCredential: GithubCredentialType | undefined;
 
-if (githubClientId === undefined || githubClientSecret === undefined) {
-  logger.info('GitHub client ID or secret is not set');
-} else {
+if (githubClientId !== undefined && githubClientSecret !== undefined) {
   githubCredential = {
     githubClientId,
     githubClientSecret
   };
+} else if (githubOauthToken !== undefined) {
+  githubCredential = {
+    githubOauthToken
+  };
+} else {
+  logger.info('GitHub credentials art not set');
 }
 
 const redisClient = redis.createClient({

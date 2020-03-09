@@ -22,13 +22,21 @@ export class DefaultGitHubApiService implements GitHubApiService {
         if (this.githubCredential === undefined) {
           return {};
         } else {
-          const { githubClientId, githubClientSecret } = this.githubCredential;
-          const h: {[key: string]: string} = {
-            // Basic Auth
-            'Authorization': `Basic: ${Buffer.from(`${githubClientId}:${githubClientSecret}`).toString('base64')}`
-          };
-          query = `?client_id=${githubClientId}&client_secret=${githubClientSecret}`;
-          return h;
+          if (this.githubCredential.githubOauthToken) {
+            const { githubOauthToken } = this.githubCredential;
+            const h: {[key: string]: string} = {
+              'Authroization': `token ${githubOauthToken}`
+            };
+            return h;
+          } else {
+            const { githubClientId, githubClientSecret } = this.githubCredential;
+            const h: {[key: string]: string} = {
+              // Basic Auth
+              'Authorization': `Basic: ${Buffer.from(`${githubClientId}:${githubClientSecret}`).toString('base64')}`
+            };
+            query = `?client_id=${githubClientId}&client_secret=${githubClientSecret}`;
+            return h;
+          }
         }
       })();
 
