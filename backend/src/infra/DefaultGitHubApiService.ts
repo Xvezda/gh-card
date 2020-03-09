@@ -4,12 +4,12 @@ import { isLeft } from 'fp-ts/lib/Either';
 
 import {GitHubApiService} from '../domain/GitHubApiService';
 import {GitHubRepositoryJsonCacheRepository} from '../domain/GitHubRepositoryJsonCacheRepository';
-import {GithubRepoJson, githubRepoJsonType} from '../types';
+import {GithubRepoJson, githubRepoJsonType, githubCredentialType} from '../types';
 
 export class DefaultGitHubApiService implements GitHubApiService {
   constructor(
     private readonly logger: log4js.Logger,
-    private readonly githubCredential: {githubClientId: string, githubClientSecret: string} | undefined,
+    private readonly githubCredential: githubCredentialType | undefined,
     private readonly gitHubRepositoryJsonCacheRepository: GitHubRepositoryJsonCacheRepository) {}
 
   async getRepository(repoName: string): Promise<{repo: GithubRepoJson} | {status: number, resText: string}> {

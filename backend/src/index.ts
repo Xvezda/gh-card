@@ -1,3 +1,4 @@
+import * as dotenv from "dotenv";
 import * as yargs from "yargs";
 import * as log4js from "log4js";
 import * as redis from "redis";
@@ -6,6 +7,10 @@ import {RedisGitHubRepositoryJsonCacheRepository} from './infra/RedisGitHubRepos
 import {DefaultGitHubApiService} from "./infra/DefaultGitHubApiService";
 import {RedisGitHubRepositoryPngCardCacheRepository} from "./infra/RedisGitHubRepositoryPngCardCacheRepository";
 import {createServer} from "./route";
+import {githubCredentialType} from './types';
+
+// Load configuration
+dotenv.config();
 
 // Create option parser
 const parser = yargs
@@ -20,6 +25,10 @@ const parser = yargs
   .option("github-client-secret", {
     describe: "GitHub Client Secret",
     type: "string",
+  })
+  .option("github-oauth-token", {
+    describe: "Github OAuth Token",
+    type: "string",
   });
 
 // Create a logger
@@ -31,7 +40,8 @@ const args = parser.parse(process.argv);
 const redisHost: string = args["redis-host"];
 const githubClientId: string | undefined = args["github-client-id"];
 const githubClientSecret: string | undefined = args["github-client-secret"];
-let githubCredential: {githubClientId: string, githubClientSecret: string} | undefined;
+const githubOauthToken: string | undefined = args["github-oauth-token"];
+let githubCredential: githubCredentialType | undefined;
 
 if (githubClientId === undefined || githubClientSecret === undefined) {
   logger.info("GitHub client ID or secret is not set");

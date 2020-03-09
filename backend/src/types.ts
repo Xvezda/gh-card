@@ -1,5 +1,10 @@
 import * as t from 'io-ts';
 
+export interface githubCredentialType {
+  githubClientId?: string;
+  githubClientSecret?: string;
+  githubOauthToken?: string;
+};
 
 // NOTE: You can define fields more if need
 //       (see: https://developer.github.com/v3/repos/#response-5)
