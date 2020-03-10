@@ -1,5 +1,16 @@
 import * as React from 'react';
 import ghLanguageColors from 'gh-language-colors';
+//import {highlight, highlightAuto} from 'highlight.js';
+//import SyntaxHighlighter from 'react-syntax-highlighter';
+//const Refractor = require('react-refractor');
+const refractor = require('refractor');
+//const py = require('refractor/lang/python');
+//const js = require('refractor/lang/javascript');
+//import 'react-refractor/all'
+
+//Refractor.registerLanguage(py)
+//Refractor.registerLanguage(js)
+
 
 import {renderEmoji} from './emoji-renderer';
 
@@ -224,21 +235,103 @@ export function generateSvg(
 
 
 export function generateGistSvg(
-    {gistId, linkTarget, filename, content, isImage, imgWidth, imgHeight}:
-      {gistId: string, linkTarget: string, filename: string, content: string | undefined, isImage: boolean, imgWidth: number | undefined, imgHeight: number | undefined}
+    {gistId, linkTarget, mimeType, filename, content, isImage, imgWidth, imgHeight}:
+      {gistId: string, linkTarget: string, mimeType: string, filename: string, content: string, isImage: boolean, imgWidth: number | undefined, imgHeight: number | undefined}
   ): {width: number, height: number, svg: JSX.Element} {
+
+
+  let codeElems: JSX.Element[] | undefined;
 
   // Define board's width
   const width = 442;
   // Define board's height
-  const height = 50 + (isImage && imgHeight !== undefined ? imgHeight : 100) + 43;
+  let height;
+  let lastCodeY;
+
+  const getTypeFromMime = (mime: string) => (mime.split('/').pop() || '').replace(/^x-/, '');
+  if (isImage) {
+    height = 80 + (imgHeight !== undefined ? imgHeight : 100) + 17;
+  } else {
+    const [codes, lastY] = (() => {
+      const mapComponent = (component: any) => {
+        component.tagName = 'tspan';
+        if (component.children) {
+          component.children = component.children.map(mapComponent);
+        }
+        return component;
+      };
+
+      const createComponents = (component: any) => {
+        return React.createElement(component.type === 'text'
+          ? React.Fragment : component.tagName, {
+          className: (component.properties && component.properties.className || []).join(' '),
+        }, component.children
+          ? component.children.map(createComponents)
+          : (component.value || null));
+      };
+
+      let y = 80
+      const diff = 18
+      const elem: JSX.Element[] = content.split('\n').slice(0, 5)
+          .map((line: string, index: number) => {
+        const e: JSX.Element = (
+          <>
+            <g fill="#a4abb3" fill-opacity="1" stroke="#a4abb3" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,0,0)">
+              <text fill="#a4abb3" fill-opacity="1" stroke="none" {...{"xml:space": "preserve"}} x="35" y={y} font-family="SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace" font-size="11" font-style="normal" mask="url(#codeMask)">{index+1}</text>
+            </g>
+            <g fill="#24292e" fill-opacity="1" stroke="#24292e" stroke-opacity="1" stroke-width="1" stroke-linecap="square" stroke-linejoin="bevel" transform="matrix(1,0,0,1,0,0)">
+              <text fill="#24292e" fill-opacity="1" stroke="none" {...{"xml:space": "preserve"}} x="50" y={y} font-family="SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace" font-size="11" font-weight="400" font-style="normal" mask="url(#codeMask)">
+                {(() => {
+                  const type = getTypeFromMime(mimeType);
+                  return !refractor.listLanguages().includes(type)
+                    ? line
+                    : refractor
+                      .highlight(line, getTypeFromMime(type))
+                      .map(mapComponent)
+                      .map(createComponents)
+                })()
+                }
+              </text>
+            </g>
+          </>
+        );
+        y += diff;
+        return e;
+      });
+      return [elem, y - diff] as const;
+    })();
+
+    lastCodeY = lastY;
+    height = lastY + 28;
+    codeElems = codes;
+  }
 
   const filenameMaxLength = 36;
+
 
   const gistIcon = (<path fill-rule="evenodd" d="M7.5 5L10 7.5 7.5 10l-.75-.75L8.5 7.5 6.75 5.75 7.5 5zm-3 0L2 7.5 4.5 10l.75-.75L3.5 7.5l1.75-1.75L4.5 5zM0 13V2c0-.55.45-1 1-1h10c.55 0 1 .45 1 1v11c0 .55-.45 1-1 1H1c-.55 0-1-.45-1-1zm1 0h10V2H1v11z" />);
 
   const svg = (
-    <svg xmlns="http://www.w3.org/2000/svg" {...{'xmlns:xlink': "http://www.w3.org/1999/xlink"}} width={width} height={height + 1} version="1.2" baseProfile="tiny">
+    <svg xmlns="http://www.w3.org/2000/svg" {...{'xmlns:xlink': "http://www.w3.org/1999/xlink"}} width={width} height={height + 1} version="1.2" overflow="auto" baseProfile="tiny">
+      <style>
+        {`
+          tspan.keyword {
+            fill: #d73a49
+          }
+          tspan.function, tspan.builtin {
+            fill: #6f42c1
+          }
+          tspan.string {
+            fill: #032f63
+          }
+          tspan.number {
+            fill: #005cc5
+          }
+          tspan.comment {
+            fill: #6a737d
+          }
+        `}
+      </style>
       <defs />
       <g fill="none" stroke="black" stroke-width="1" fill-rule="evenodd" stroke-linecap="square" stroke-linejoin="bevel">
         <g fill="#ffffff" fill-opacity="1" stroke="none" transform="matrix(1,0,0,1,0,0)">
@@ -256,14 +349,23 @@ export function generateGistSvg(
             <text fill="#0366d6" fill-opacity="1" stroke="none" {...{"xml:space": "preserve"}} x="54" y="36" font-family="sans-serif" font-size="16" font-weight="630" font-style="normal">{ellipsisByWidth(filename, filenameMaxLength)}</text>
           </a>
         </g>
-        {
-          (isImage)?
-            <g fill="#586069" fill-opacity="1" stroke="none" transform="matrix(1,0,0,1,30,21)">
+        {(() => {
+          if (isImage) {
+            return (<g fill="#f6f8fa" fill-opacity="1" stroke="none" transform="matrix(1,0,0,1,30,21)">
               <image {...{"xlink:href": content}} width={imgWidth} height={imgHeight} x="0" y="40" />
-            </g>
-            : undefined
-        }
-
+            </g>)
+          } else {
+            return [
+              <mask id="codeMask">
+                <rect width={width-17*2} height={height-60-17} x="17" y="60" fill="white" />
+              </mask>,
+              <g fill="#f6f8fa" fill-opacity="1" stroke="none" transform="matrix(1,0,0,1,0,0)">
+                <rect width={width-17*2} height={height-60-17} x="17" y="60" />
+              </g>,
+              codeElems
+            ];
+          }
+        })()}
       </g>
     </svg>
   )

@@ -10,7 +10,7 @@ export const githubGistJsonType = t.type({
   filename: t.string,
   language: t.union([t.string, t.null]),
   type: t.string,
-  content: t.union([t.string, t.undefined]),
+  content: t.string,
   image: t.boolean,
   image_width: t.union([t.number, t.undefined]),
   image_height: t.union([t.number, t.undefined])

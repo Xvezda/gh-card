@@ -115,7 +115,7 @@ export class DefaultGitHubApiService implements GitHubApiService {
 
       const jsonStream = githubRes.body
         .pipe(new FirstChunkStream({
-          chunkSize: 1024 /* 1KB */
+          chunkSize: 1024,
         }, async (chunk, encoding) => {
           return chunk.toString();
         }));
@@ -128,7 +128,7 @@ export class DefaultGitHubApiService implements GitHubApiService {
 
       if (fileData.type === 'image/gif') {
         return {
-          status: 400,
+          status: 1024 /* Approx 1KB */,
           resText: 'Sorry, GIF image is not supported'
         };
       }
@@ -181,6 +181,8 @@ export class DefaultGitHubApiService implements GitHubApiService {
           }
           */
          // fileData.content = undefined;
+        } else {
+          fileData.content = Buffer.from(fileData.content, 'base64').toString('utf8');
         }
         return JSON.stringify(fileData);
       })();

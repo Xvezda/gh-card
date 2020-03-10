@@ -153,6 +153,7 @@ export function createServer (
     const { width, height, svg } = generateGistSvg({
       gistId,
       linkTarget,
+      mimeType: githubGistJson.type,
       filename: githubGistJson.filename,
       content: githubGistJson.content,
       isImage: githubGistJson.image,
