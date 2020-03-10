@@ -103,7 +103,7 @@ export class DefaultGitHubApiService implements GitHubApiService {
       headers['Accept'] = 'application/vnd.github.v3.base64+json';
 
       const githubRes = await fetch(`https://api.github.com/gists/${gistId}${query}`, {
-        headers,
+        headers
       });
 
       if (githubRes.status !== 200) {
@@ -115,7 +115,7 @@ export class DefaultGitHubApiService implements GitHubApiService {
 
       const jsonStream = githubRes.body
         .pipe(new FirstChunkStream({
-          chunkSize: 1024,
+          chunkSize: 1024
         }, async (chunk, encoding) => {
           return chunk.toString();
         }));
@@ -148,7 +148,7 @@ export class DefaultGitHubApiService implements GitHubApiService {
           const imageMaxWidth = 390;
 
           const calcWidthRatio = (height: number) => {
-            return ((height - (height-imageMaxHeight)) / height);
+            return ((height - (height - imageMaxHeight)) / height);
           };
 
           const imageDimensions = sizeOf(imageBuffer);

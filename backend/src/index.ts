@@ -10,7 +10,6 @@ import { RedisGitHubRepositoryPngCardCacheRepository } from './infra/RedisGitHub
 import { createServer } from './route';
 import { GithubCredentialType } from './types';
 
-
 // Load configuration
 dotenv.config();
 

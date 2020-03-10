@@ -1,4 +1,3 @@
 declare module 'resize-img' {
-    export function resizeImg(buffer: any, options: any): Promise<Buffer>
+    export function resizeImg (buffer: any, options: any): Promise<Buffer>;
 }
-

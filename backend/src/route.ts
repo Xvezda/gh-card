@@ -158,7 +158,7 @@ export function createServer (
       content: githubGistJson.content,
       isImage: githubGistJson.image,
       imgWidth: githubGistJson.image_width,
-      imgHeight: githubGistJson.image_height,
+      imgHeight: githubGistJson.image_height
     });
     const svgStr: string = renderToString(svg);
 

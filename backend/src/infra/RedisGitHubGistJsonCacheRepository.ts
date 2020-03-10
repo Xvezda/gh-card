@@ -15,6 +15,6 @@ export class RedisGitHubGistJsonCacheRepository
   }
 
   async get (gistId: string): Promise<string | undefined> {
-    return await super.get(gistId);
+    return super.get(gistId);
   }
 }

@@ -9,7 +9,7 @@
     "start": "npm run build && node ./dist/src/index.js",
     "prepare": "npm run build",
     "test": "mocha --require ts-node/register test/**/*.ts",
-    "lint": "tslint -c tslint.json --fix 'src/**/*.ts'"
+    "lint": "tslint -c tslint.json --fix 'src/**/*.ts' 'src/**/*.tsx'"
   },
   "keywords": [],
   "repository": {
