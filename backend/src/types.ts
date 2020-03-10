@@ -6,6 +6,17 @@ export interface GithubCredentialType {
   githubOauthToken?: string;
 }
 
+export const githubGistJsonType = t.type({
+  filename: t.string,
+  language: t.union([t.string, t.null]),
+  type: t.string,
+  content: t.union([t.string, t.undefined]),
+  image: t.boolean,
+  image_width: t.union([t.number, t.undefined]),
+  image_height: t.union([t.number, t.undefined])
+});
+export type GithubGistJson = t.TypeOf<typeof githubGistJsonType>;
+
 // NOTE: You can define fields more if need
 //       (see: https://developer.github.com/v3/repos/#response-5)
 export const githubRepoJsonType = t.type({

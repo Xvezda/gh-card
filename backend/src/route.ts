@@ -7,7 +7,7 @@ import * as svg2png from 'svg2png';
 
 import { GitHubApiService } from './domain/GitHubApiService';
 import { GitHubRepositoryPngCardCacheRepository } from './domain/GitHubRepositoryPngCardCacheRepository';
-import { generateSvg } from './svg-generator';
+import { generateSvg, generateGistSvg } from './svg-generator';
 
 const repoWithExtType = t.type({
   ownerName: t.string,
@@ -18,6 +18,10 @@ type RepoWithExt = t.TypeOf<typeof repoWithExtType>;
 
 const repoRequestQueryType = t.type({
   fullname: t.union([t.string, t.undefined]),
+  link_target: t.union([t.string, t.undefined])
+});
+
+const gistRequestQueryType = t.type({
   link_target: t.union([t.string, t.undefined])
 });
 
@@ -117,6 +121,50 @@ export function createServer (
         res.send(pngBuffer);
         return;
     }
+  });
+
+  app.get('/gists/:gistId.svg', async (req, res) => {
+    // Validate query
+    const gistRequestQueryEither = gistRequestQueryType.decode(req.query);
+    if (isLeft(gistRequestQueryEither)) {
+      res.status(400);
+      res.send('invalid query parameter');
+      return;
+    }
+    const gistRequestQuery = gistRequestQueryEither.right;
+    const linkTarget: string = gistRequestQuery.link_target ?? '';
+
+    const gistId = `${req.params.gistId}`;
+    const gistResult = await gitHubApiService.getGist(`${gistId}`);
+
+    if ('status' in gistResult) {
+      logger.error(`GitHub API error: ${JSON.stringify(gistResult)}`);
+      if (gistResult.status === 404) {
+        res.status(404);
+        res.send(`${gistId} not found\n`);
+        return;
+      }
+      res.status(400);
+      res.send('Error in GitHub API\n');
+      return;
+    }
+    const githubGistJson = gistResult.gist;
+
+    const { width, height, svg } = generateGistSvg({
+      gistId,
+      linkTarget,
+      filename: githubGistJson.filename,
+      content: githubGistJson.content,
+      isImage: githubGistJson.image,
+      imgWidth: githubGistJson.image_width,
+      imgHeight: githubGistJson.image_height,
+    });
+    const svgStr: string = renderToString(svg);
+
+    res.header({
+      'Content-Type': 'image/svg+xml'
+    });
+    res.send(svgStr);
   });
 
   return app;

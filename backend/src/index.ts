@@ -3,11 +3,13 @@ import * as yargs from 'yargs';
 import * as log4js from 'log4js';
 import * as redis from 'redis';
 
-import { RedisGitHubRepositoryJsonCacheRepository } from './infra/RedisGitHubRepositoryJsonCacheRepository';
+import { RedisGitHubGistJsonCacheRepository } from './infra/RedisGitHubGistJsonCacheRepository';
+// import { RedisGitHubRepositoryJsonCacheRepository } from './infra/RedisGitHubRepositoryJsonCacheRepository';
 import { DefaultGitHubApiService } from './infra/DefaultGitHubApiService';
 import { RedisGitHubRepositoryPngCardCacheRepository } from './infra/RedisGitHubRepositoryPngCardCacheRepository';
 import { createServer } from './route';
 import { GithubCredentialType } from './types';
+
 
 // Load configuration
 dotenv.config();
@@ -60,7 +62,7 @@ const redisClient = redis.createClient({
   host: redisHost
 });
 
-const gitHubRepositoryJsonCacheRepository = new RedisGitHubRepositoryJsonCacheRepository(
+const gitHubRepositoryJsonCacheRepository = new RedisGitHubGistJsonCacheRepository(
   redisClient,
   // 20 min
   // TODO: Hard code

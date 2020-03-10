@@ -7,7 +7,7 @@ export class RedisGitHubRepositoryJsonCacheRepository implements GitHubRepositor
   private keyPrefix = 'repos-json';
   private redisGetAsync: (key: string) => Promise<string>;
 
-  constructor (private readonly redisClient: redis.RedisClient, private readonly ttlSec: number) {
+  constructor (protected readonly redisClient: redis.RedisClient, protected readonly ttlSec: number) {
     this.redisGetAsync = promisify(this.redisClient.get).bind(this.redisClient);
   }
 
