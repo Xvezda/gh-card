@@ -1,8 +1,8 @@
 import * as log4js from 'log4js';
 import fetch from 'node-fetch';
-import { Readable } from 'stream';
+const request = require('request');
 import * as getStream from 'get-stream';
-import * as FirstChunkStream from 'first-chunk-stream';
+import streamHead from 'stream-head';
 import { imageSize as sizeOf } from 'image-size';
 const resizeImg = require('resize-img');
 import { partialParse } from 'partial-json-parser';
@@ -71,7 +71,7 @@ export class DefaultGitHubApiService implements GitHubApiService {
     };
   }
 
-  async getGist (gistId: string): Promise<{gist: GithubGistJson} | {status: number, resText: string}> {
+  async getGist (ownerName: string, gistId: string): Promise<{gist: GithubGistJson} | {status: number, resText: string}> {
     let jsonStr: string | undefined = await this.gitHubRepositoryJsonCacheRepository.get(gistId);
     if (jsonStr === undefined) {
       this.logger.info(`Gist JSON ${gistId} is not cached`);
@@ -98,37 +98,37 @@ export class DefaultGitHubApiService implements GitHubApiService {
           }
         }
       })();
-
-      // Prevent content from escaping
+      // Prevent content from escaping JSON format
       headers['Accept'] = 'application/vnd.github.v3.base64+json';
 
-      const githubRes = await fetch(`https://api.github.com/gists/${gistId}${query}`, {
-        headers
+      const userGist = await fetch(`https://api.github.com/users/${ownerName}/gists`, {
+        headers,
       });
 
-      if (githubRes.status !== 200) {
+      if (userGist.status !== 200) {
         return {
-          status: githubRes.status,
-          resText: await githubRes.text()
+          status: userGist.status,
+          resText: await userGist.text()
         };
       }
 
-      const jsonStream = githubRes.body
-        .pipe(new FirstChunkStream({
-          chunkSize: 1024
-        }, async (chunk, encoding) => {
-          return chunk.toString();
-        }));
+      const userGistStr = await userGist.text();
+      const userGistJson = JSON.parse(userGistStr);
 
-      // const jsonRes = await githubRes.text();
-      const jsonRes = await getStream(jsonStream);
-      const jsonData = partialParse(jsonRes);
-      let fileData = jsonData.files[(Object.keys(jsonData.files).shift() as string)];
+      const targetGist = userGistJson
+        .filter((gist: any) => gist.id === gistId).pop();
+      const targetFile = targetGist.files[
+        (Object.keys(targetGist.files).pop() as string)
+      ];
+      const fileData = {
+        ...targetFile
+      };
+
       fileData.image = false;
 
       if (fileData.type === 'image/gif') {
         return {
-          status: 1024 /* Approx 1KB */,
+          status: 501,
           resText: 'Sorry, GIF image is not supported'
         };
       }
@@ -136,10 +136,12 @@ export class DefaultGitHubApiService implements GitHubApiService {
       jsonStr = await (async () => {
         // Set image binary content to undefined when stringify
         // Also, set dimensions which needed by IE, Firefox environment.
+        const fileRes = await fetch(fileData.raw_url, {
+          headers,
+        });
         if (fileData.type.startsWith('image')) {
 
-          const imageRes = await fetch(fileData.raw_url);
-          const imageBuffer = await imageRes.buffer();
+          const imageBuffer = await fileRes.buffer();
 
           fileData.image = true;
 
@@ -164,30 +166,17 @@ export class DefaultGitHubApiService implements GitHubApiService {
             });
             fileData.content = `data:${fileData.type};base64,${resizedImage.toString('base64')}`;
           }
-
-          /*
-          if (fileData.type === 'image/gif') {
-            return {
-              status: 400,
-              resText: 'Sorry, GIF image is not supported'
-            };
-            const frameData = await gifFrames({
-              url: 'data:image/gif;base64,'.concat(fileData.content.replace(/\n/g, '')),
-              frames: 0
-            })
-            fileData.content = Buffer.from(frameData[0].getImage(), 'utf8').toString('base64');
-          } else {
-            fileData.content = undefined;
-          }
-          */
-         // fileData.content = undefined;
         } else {
-          fileData.content = Buffer.from(fileData.content, 'base64').toString('utf8');
+          const fileText = await fileRes.text();
+          fileData.content = fileText
+            .split('\n')
+            .slice(0, 5)
+            .join('\n');
         }
         return JSON.stringify(fileData);
       })();
       // Cache
-      this.gitHubRepositoryJsonCacheRepository.cache(gistId, jsonStr);
+      // this.gitHubRepositoryJsonCacheRepository.cache(gistId, jsonStr);
     }
 
     const githubGistJsonEither = githubGistJsonType.decode(JSON.parse(jsonStr));

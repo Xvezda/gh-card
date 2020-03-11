@@ -123,7 +123,7 @@ export function createServer (
     }
   });
 
-  app.get('/gists/:gistId.svg', async (req, res) => {
+  app.get('/gists/:ownerName/:gistId.svg', async (req, res) => {
     // Validate query
     const gistRequestQueryEither = gistRequestQueryType.decode(req.query);
     if (isLeft(gistRequestQueryEither)) {
@@ -134,8 +134,9 @@ export function createServer (
     const gistRequestQuery = gistRequestQueryEither.right;
     const linkTarget: string = gistRequestQuery.link_target ?? '';
 
+    const ownerName = `${req.params.ownerName}`;
     const gistId = `${req.params.gistId}`;
-    const gistResult = await gitHubApiService.getGist(`${gistId}`);
+    const gistResult = await gitHubApiService.getGist(ownerName, gistId);
 
     if ('status' in gistResult) {
       logger.error(`GitHub API error: ${JSON.stringify(gistResult)}`);

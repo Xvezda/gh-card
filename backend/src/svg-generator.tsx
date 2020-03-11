@@ -269,7 +269,7 @@ export function generateGistSvg (
 
       let y = 80;
       const diff = 18;
-      const elem: JSX.Element[] = content.split('\n').slice(0, 5)
+      const elem: JSX.Element[] = content.split('\n')
           .map((line: string, index: number) => {
             const e: JSX.Element = (
           <>

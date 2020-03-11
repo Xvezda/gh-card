@@ -6,5 +6,5 @@ export interface GitHubApiService {
    * @param repoName owner/repo
    */
   getRepository (repoName: string): Promise<{repo: GithubRepoJson} | {status: number, resText: string}>;
-  getGist (gistId: string): Promise<{gist: GithubGistJson} | {status: number, resText: string}>;
+  getGist (ownerName: string, gistId: string): Promise<{gist: GithubGistJson} | {status: number, resText: string}>;
 }
