@@ -1,11 +1,9 @@
 import * as log4js from 'log4js';
 import fetch from 'node-fetch';
-const request = require('request');
 import * as getStream from 'get-stream';
 import streamHead from 'stream-head';
 import { imageSize as sizeOf } from 'image-size';
 const resizeImg = require('resize-img');
-import { partialParse } from 'partial-json-parser';
 import { isLeft } from 'fp-ts/lib/Either';
 
 import { GitHubApiService } from '../domain/GitHubApiService';
@@ -176,7 +174,7 @@ export class DefaultGitHubApiService implements GitHubApiService {
         return JSON.stringify(fileData);
       })();
       // Cache
-      // this.gitHubRepositoryJsonCacheRepository.cache(gistId, jsonStr);
+      this.gitHubRepositoryJsonCacheRepository.cache(gistId, jsonStr);
     }
 
     const githubGistJsonEither = githubGistJsonType.decode(JSON.parse(jsonStr));
