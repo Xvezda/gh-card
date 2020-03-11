@@ -233,8 +233,8 @@ export function generateSvg (
 }
 
 export function generateGistSvg (
-    { gistId, linkTarget, mimeType, filename, content, isImage, imgWidth, imgHeight }:
-      {gistId: string, linkTarget: string, mimeType: string, filename: string, content: string, isImage: boolean, imgWidth: number | undefined, imgHeight: number | undefined}
+    { gistId, linkTarget, language, filename, content, isImage, imgWidth, imgHeight }:
+      {gistId: string, linkTarget: string, language: string | null, filename: string, content: string, isImage: boolean, imgWidth: number | undefined, imgHeight: number | undefined}
   ): {width: number, height: number, svg: JSX.Element} {
 
   let codeElems: JSX.Element[] | undefined;
@@ -245,7 +245,6 @@ export function generateGistSvg (
   let height;
   let lastCodeY;
 
-  const getTypeFromMime = (mime: string) => (mime.split('/').pop() || '').replace(/^x-/, '');
   if (isImage) {
     height = 80 + (imgHeight !== undefined ? imgHeight : 100) + 17;
   } else {
@@ -279,11 +278,14 @@ export function generateGistSvg (
             <g fill='#24292e' fill-opacity='1' stroke='#24292e' stroke-opacity='1' stroke-width='1' stroke-linecap='square' stroke-linejoin='bevel' transform='matrix(1,0,0,1,0,0)'>
               <text fill='#24292e' fill-opacity='1' stroke='none' {...{ 'xml:space': 'preserve' }} x='50' y={y} font-family='SFMono-Regular,Consolas,Liberation Mono,Menlo,monospace' font-size='11' font-weight='400' font-style='normal' mask='url(#codeMask)'>
                 {(() => {
-                  const type = getTypeFromMime(mimeType);
-                  return !refractor.listLanguages().includes(type)
+                  const normalizeLanguage = ((language: string | null) => {
+                    return (language || '').toLowerCase();
+                  });
+                  return !refractor.listLanguages()
+                    .includes(normalizeLanguage(language))
                     ? line
                     : refractor
-                      .highlight(line, getTypeFromMime(type))
+                      .highlight(line, normalizeLanguage(language))
                       .map(mapComponent)
                       .map(createComponents);
                 })()

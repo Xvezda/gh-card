@@ -1,15 +1,24 @@
 import * as log4js from 'log4js';
+import { isLeft } from 'fp-ts/lib/Either';
+
 import fetch from 'node-fetch';
 import * as getStream from 'get-stream';
-import streamHead from 'stream-head';
 import { imageSize as sizeOf } from 'image-size';
+
 const resizeImg = require('resize-img');
-import { isLeft } from 'fp-ts/lib/Either';
+
 
 import { GitHubApiService } from '../domain/GitHubApiService';
 import { GitHubRepositoryJsonCacheRepository } from '../domain/GitHubRepositoryJsonCacheRepository';
 import { GitHubGistJsonCacheRepository } from '../domain/GitHubGistJsonCacheRepository';
-import { GithubGistJson, githubGistJsonType, GithubRepoJson, githubRepoJsonType, GithubCredentialType } from '../types';
+import {
+  GithubGistJson,
+  githubGistJsonType,
+  GithubRepoJson,
+  githubRepoJsonType,
+  GithubCredentialType
+} from '../types';
+
 
 export class DefaultGitHubApiService implements GitHubApiService {
   constructor (
